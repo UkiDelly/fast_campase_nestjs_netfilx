@@ -9,8 +9,10 @@ import { MovieDetail } from './entities/movie_detail.entity';
 @Injectable()
 export class MoviesService {
   constructor(
-    @InjectRepository(Movie) private readonly movieRepository: Repository<Movie>,
-    @InjectRepository(MovieDetail) private readonly movieDetailRepository: Repository<MovieDetail>
+    @InjectRepository(Movie)
+    private readonly movieRepository: Repository<Movie>,
+    @InjectRepository(MovieDetail)
+    private readonly movieDetailRepository: Repository<MovieDetail>,
   ) {}
 
   /**
@@ -37,7 +39,10 @@ export class MoviesService {
    * @param {number} id
    */
   async getMovieById(id: number) {
-    const movie = await this.movieRepository.findOne({ where: { id }, relations: { detail: true } });
+    const movie = await this.movieRepository.findOne({
+      where: { id },
+      relations: { detail: true },
+    });
 
     if (!movie) {
       throw new NotFoundException('Movie not found');
@@ -49,11 +54,17 @@ export class MoviesService {
   /**
    * Create a movie
    *
-   * @param {string} title
+   * @param createMovieDto
    */
   async createMovie(createMovieDto: CreateMovieDto) {
-    const movieDetail = await this.movieDetailRepository.save({ detail: createMovieDto.detail });
-    return this.movieRepository.save({ title: createMovieDto.title, genre: createMovieDto.genre, detail: movieDetail });
+
+    return this.movieRepository.save({
+      title: createMovieDto.title,
+      genre: createMovieDto.genre,
+      detail: {
+        detail: createMovieDto.detail,
+      },
+    });
   }
 
   /**
@@ -63,20 +74,30 @@ export class MoviesService {
    * @param {string} title
    */
   async updateMovie(id: number, updateDto: UpdateMovieDto) {
-    const movie = await this.movieRepository.findOne({ where: { id }, relations: ['detail'] });
+    const movie = await this.movieRepository.findOne({
+      where: { id },
+      relations: ['detail'],
+    });
 
     if (!movie) {
       throw new NotFoundException('Movie not found');
     }
 
-    // const detail = movie.detail;
+    const { detail, ...movieRest } = updateDto;
 
-    // if (updateDto.detail) {
-    //   detail.detail = updateDto.detail;
-    // }
-    // movie.detail = detail;
+    await this.movieRepository.update({ id }, movieRest);
 
-    // await this.movieRepository.update({ id }, { ...updateDto, detail: detail });
+    if (detail) {
+      await this.movieDetailRepository.update(
+        { id: movie.detail.id },
+        { detail },
+      );
+    }
+
+    return this.movieRepository.findOne({
+      where: { id },
+      relations: ['detail'],
+    });
   }
 
   /**
@@ -85,13 +106,16 @@ export class MoviesService {
    * @param {number} id
    */
   async deleteMovie(id: number) {
-    const movieIndex = await this.movieRepository.findOne({ where: { id } });
+    const movieIndex = await this.movieRepository.findOne({
+      where: { id },
+      relations: ['detail'],
+    });
 
     if (!movieIndex) {
       throw new NotFoundException('Movie not found');
     }
 
-    await this.movieRepository.delete(id);
+    await this.movieDetailRepository.delete(movieIndex.detail.id);
 
     return id;
   }

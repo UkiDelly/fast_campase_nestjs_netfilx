@@ -1,4 +1,7 @@
 {
   "singleQuote": true,
-  "trailingComma": "all"
+  "trailingComma": "all",
+  "arrowParens": "avoid",
+  "filepath": "src/**/*.{js,jsx,ts,tsx}",
+  "printWidth": 150
 }
