@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'dotenv';
 import { DirectorModule } from './director/director.module';
+import { Director } from './director/entities/director.entity';
+import { Genre } from './genre/entities/genre.entity';
+import { GenreModule } from './genre/genre.module';
 import { Movie } from './movies/entities/movie.entity';
 import { MovieDetail } from './movies/entities/movie_detail.entity';
 import { MoviesModule } from './movies/movies.module';
-import { Director } from './director/entities/director.entity';
 
 config();
 
@@ -34,7 +36,7 @@ config();
       schema: 'fastcampus', //configService.get('DB_NAME'),
       synchronize: true,
       autoLoadEntities: true,
-      entities: [Movie, MovieDetail, Director],
+      entities: [Movie, MovieDetail, Director, Genre],
       poolSize: 10,
     }),
     // TypeOrmModule.forRootAsync({
@@ -57,6 +59,7 @@ config();
     // }),
     MoviesModule,
     DirectorModule,
+    GenreModule,
     // ConfigModule이 초기화 이후 TypeOrmModule을 초기화하기 위해 forRootAsync를 사용
   ],
   controllers: [],

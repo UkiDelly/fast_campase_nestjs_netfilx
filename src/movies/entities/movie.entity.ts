@@ -1,6 +1,7 @@
 import { Director } from 'src/director/entities/director.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseTable } from '../../common/entity/base.entity';
+import { Genre } from '../../genre/entities/genre.entity';
 import { MovieDetail } from './movie_detail.entity';
 
 @Entity()
@@ -13,8 +14,8 @@ export class Movie extends BaseTable {
   title: string;
 
   // @Transform(({ value }) => value.toUpperCase()) // 커스텀 transformer
-  @Column()
-  genre: string;
+  @ManyToMany(() => Genre, genre => genre.movies)
+  genres: Genre[];
 
   @OneToOne(() => MovieDetail, movieDetail => movieDetail.movie, {
     cascade: true,
