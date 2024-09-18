@@ -1,5 +1,6 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { BaseTable } from './base.entity';
+import { Director } from 'src/director/entities/director.entity';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseTable } from '../../common/entity/base.entity';
 import { MovieDetail } from './movie_detail.entity';
 
 @Entity()
@@ -15,10 +16,13 @@ export class Movie extends BaseTable {
   @Column()
   genre: string;
 
-  @OneToOne(
-    () => MovieDetail,
-    movieDetail => movieDetail.movie,
-    { cascade: true, onDelete: 'CASCADE' }
-  )
+  @OneToOne(() => MovieDetail, movieDetail => movieDetail.movie, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   detail: MovieDetail;
+
+  @ManyToOne(() => Director, director => director.movies, { cascade: true })
+  @JoinColumn({ name: 'director_id' })
+  director: Director | any;
 }

@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { DirectorService } from 'src/director/director.service';
+import type { Director } from 'src/director/entities/director.entity';
 import { Like, Repository } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import type { UpdateMovieDto } from './dto/update-movie.dto';
@@ -13,6 +15,7 @@ export class MoviesService {
     private readonly movieRepository: Repository<Movie>,
     @InjectRepository(MovieDetail)
     private readonly movieDetailRepository: Repository<MovieDetail>,
+    private readonly directService: DirectorService,
   ) {}
 
   /**
@@ -25,10 +28,11 @@ export class MoviesService {
     if (title) {
       [movies, count] = await this.movieRepository.findAndCount({
         where: { title: Like(`$${title}$`) },
+        relations: ['detail', 'director'],
       });
     }
 
-    [movies, count] = await this.movieRepository.find();
+    [movies, count] = await this.movieRepository.find({ relations: ['detail', 'director'] });
 
     return { movies, count };
   }
@@ -41,7 +45,7 @@ export class MoviesService {
   async getMovieById(id: number) {
     const movie = await this.movieRepository.findOne({
       where: { id },
-      relations: { detail: true },
+      relations: { detail: true, director: true },
     });
 
     if (!movie) {
@@ -57,6 +61,7 @@ export class MoviesService {
    * @param createMovieDto
    */
   async createMovie(createMovieDto: CreateMovieDto) {
+    const director: Director = await this.directService.findOne(createMovieDto.directorId);
 
     return this.movieRepository.save({
       title: createMovieDto.title,
@@ -64,6 +69,7 @@ export class MoviesService {
       detail: {
         detail: createMovieDto.detail,
       },
+      director,
     });
   }
 
@@ -74,6 +80,7 @@ export class MoviesService {
    * @param {string} title
    */
   async updateMovie(id: number, updateDto: UpdateMovieDto) {
+    const updatedMovie: Partial<Movie> = {};
     const movie = await this.movieRepository.findOne({
       where: { id },
       relations: ['detail'],
@@ -83,21 +90,21 @@ export class MoviesService {
       throw new NotFoundException('Movie not found');
     }
 
-    const { detail, ...movieRest } = updateDto;
+    const { detail, directorId, ...movieRest } = updateDto;
 
-    await this.movieRepository.update({ id }, movieRest);
+    if (directorId) {
+      const director = await this.directService.findOne(directorId);
 
-    if (detail) {
-      await this.movieDetailRepository.update(
-        { id: movie.detail.id },
-        { detail },
-      );
+      updatedMovie.director = director;
     }
 
-    return this.movieRepository.findOne({
-      where: { id },
-      relations: ['detail'],
-    });
+    if (detail) {
+      updatedMovie.detail = { ...movie.detail, detail };
+    }
+
+    await this.movieRepository.update(id, { ...movieRest, ...updatedMovie });
+
+    return this.getMovieById(id);
   }
 
   /**
