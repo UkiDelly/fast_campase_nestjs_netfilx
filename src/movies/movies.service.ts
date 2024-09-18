@@ -85,7 +85,7 @@ export class MoviesService {
    */
   async updateMovie(id: number, updateDto: UpdateMovieDto) {
     const updatedMovie: Partial<Movie> = {};
-    const movie = await this.movieRepository.findOne({
+    const movie: Movie = await this.movieRepository.findOne({
       where: { id },
       relations: ['detail', 'director', 'genres'],
     });
@@ -100,7 +100,7 @@ export class MoviesService {
 
     // 감독을 찾아서 업데이트한다.
     if (directorId) {
-      const director = await this.directService.findOne(directorId);
+      const director: Director = await this.directService.findOne(directorId);
       updatedMovie.director = director;
     }
 
@@ -111,7 +111,7 @@ export class MoviesService {
 
     // 장르를 찾아서 업데이트한다.
     if (genres) {
-      const genreEntities = await this.genreService.findGenresOrCreate(genres);
+      const genreEntities: Genre[] = await this.genreService.findGenresOrCreate(genres);
       updatedMovie.genres = genreEntities;
     }
 
