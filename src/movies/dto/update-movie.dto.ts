@@ -1,8 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
 import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
   registerDecorator,
   ValidatorConstraint,
   type ValidationArguments,
@@ -37,34 +34,21 @@ function IsPasswordValid(validationOptions?: ValidationOptions) {
 }
 
 export class UpdateMovieDto extends PartialType(CreateMovieDto) {
-  @IsNotEmpty()
-  @IsString()
-  @IsOptional()
-  title?: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @IsOptional()
-  genre?: string;
-
   // @IsDefined() // null이거나 undefined일 수 없음
   // @IsOptional() // null이거나 undefined일 수 있음
   // @Equals('test') // 값이 'test'여야 함
   // @IsEmpty() // null 또는 undefined 또는 ''
   // @IsNotEmpty() // null 또는 undefined 또는 ''이 아니어야 함
-
   // 배열
   // @IsIn(['test1', 'test2']) // 값이 'test1' 또는 'test2'여야 함
   // @IsNotIn(['test1', 'test2']) // 값이 'test1' 또는 'test2'가 아니어야 함
   // @IsArray() // 배열이어야 함
-
   // @IsDateString()  // IOS 8601 date string이여야함
   // @IsDivisibleBy(5) // 5로 나누어 떨어져야 함
   // @IsPositive() // 양수여야 함
   // @IsNegative() // 음수여야 함
   // @Min(10) // 최소값
   // @Max(20) // 최대값
-
   // String 관련
   // @Contains('test') // 값이 'test'를 포함해야 함
   // @NotContains('test') // 값이 'test'를 포함하지 않아야 함
