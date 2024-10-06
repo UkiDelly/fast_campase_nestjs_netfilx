@@ -11,7 +11,8 @@ export class MoviesController {
 
   @Get()
   getMovies(@Query('title') title: string) {
-    return this.moviesService.getManyMovies(title);
+    // return this.moviesService.getManyMovies(title);
+    return this.moviesService.findAllQuery(title);
   }
 
   @Get(':id')

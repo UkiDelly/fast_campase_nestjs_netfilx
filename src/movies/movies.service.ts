@@ -1,10 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DirectorService } from 'src/director/director.service';
-import type { Director } from 'src/director/entities/director.entity';
-import type { Genre } from 'src/genre/entities/genre.entity';
-import { GenreService } from 'src/genre/genre.service';
-import { Like, Repository } from 'typeorm';
+import { Director } from 'src/director/entities/director.entity';
+import { Genre } from 'src/genre/entities/genre.entity';
+import { DataSource, In, Like, Repository } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import type { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie } from './entities/movie.entity';
@@ -17,8 +15,11 @@ export class MoviesService {
     private readonly movieRepository: Repository<Movie>,
     @InjectRepository(MovieDetail)
     private readonly movieDetailRepository: Repository<MovieDetail>,
-    private readonly directService: DirectorService,
-    private readonly genreService: GenreService,
+    @InjectRepository(Director)
+    private readonly directorRepository: Repository<Director>,
+    @InjectRepository(Genre)
+    private readonly genreRepository: Repository<Genre>,
+    private readonly datasource: DataSource
   ) {}
 
   /**
@@ -64,24 +65,38 @@ export class MoviesService {
    * @param createMovieDto
    */
   async createMovie(createMovieDto: CreateMovieDto) {
-    const director: Director = await this.directService.findOne(createMovieDto.directorId);
-    const genres: Genre[] = await this.genreService.findGenresOrCreate(createMovieDto.genres);
+    // 트랜잭션 설정
+    const qr = this.datasource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
 
-    return this.movieRepository.save({
-      title: createMovieDto.title,
-      detail: {
-        detail: createMovieDto.detail,
-      },
-      genres,
-      director,
-    });
+    try {
+      const director: Director = await qr.manager.findOne(Director, { where: { id: createMovieDto.directorId } });
+      const genres: Genre[] = await qr.manager.find(Genre, { where: { name: In(createMovieDto.genres) } }); //this.genreService.findGenresOrCreate(createMovieDto.genres);
+
+      await qr.commitTransaction();
+
+      return this.movieRepository.save({
+        title: createMovieDto.title,
+        detail: {
+          detail: createMovieDto.detail,
+        },
+        genres,
+        director,
+      });
+    } catch (e) {
+      await qr.rollbackTransaction();
+      throw e;
+    } finally {
+      await qr.release();
+    }
   }
 
   /**
    * Update a movie
    *
    * @param {number} id
-   * @param {string} title
+   * @param updateDto
    */
   async updateMovie(id: number, updateDto: UpdateMovieDto) {
     const updatedMovie: Partial<Movie> = {};
@@ -100,8 +115,7 @@ export class MoviesService {
 
     // 감독을 찾아서 업데이트한다.
     if (directorId) {
-      const director: Director = await this.directService.findOne(directorId);
-      updatedMovie.director = director;
+      updatedMovie.director = await this.directorRepository.findOne({ where: { id: directorId } });
     }
 
     // detail 값 업데이트
@@ -111,7 +125,17 @@ export class MoviesService {
 
     // 장르를 찾아서 업데이트한다.
     if (genres) {
-      const genreEntities: Genre[] = await this.genreService.findGenresOrCreate(genres);
+      const genreEntities = await Promise.all(
+        genres.map(async name => {
+          let genre = await this.genreRepository.findOne({ where: { name } });
+          if (!genre) {
+            genre = this.genreRepository.create({ name });
+            await this.genreRepository.save(genre);
+          }
+          return genre;
+        })
+      );
+
       updatedMovie.genres = genreEntities;
     }
 
@@ -138,5 +162,18 @@ export class MoviesService {
     await this.movieDetailRepository.delete(movieIndex.detail.id);
 
     return id;
+  }
+
+  // 쿼리빌더 사용하기
+  async findAllQuery(title: string) {
+    const qb = await this.movieRepository
+      .createQueryBuilder('movie')
+      .leftJoinAndSelect('movie.detail', 'detail')
+      .leftJoinAndSelect('movie.director', 'director')
+      .leftJoinAndSelect('movie.genres', 'genres')
+      .where('movie.title LIKE :title', { title: `%${title}%` })
+      .getMany();
+
+    return qb;
   }
 }
