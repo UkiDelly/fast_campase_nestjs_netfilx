@@ -6,8 +6,8 @@ export class BaseTable {
     name: 'created_at',
     type: 'timestamp with time zone',
     transformer: {
-      to: () => dayjs(new Date()),
-      from: (value: Date) => dayjs(value).format('YYYY-MM-DD  hh:mm:ss A'),
+      to: () => dayjs(),
+      from: (value: Date) => dayjs(value).format('YYYY-MM-DD hh:mm:ss A'),
     },
   })
   createdAt: Date;

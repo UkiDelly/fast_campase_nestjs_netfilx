@@ -1,18 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { transaction } from 'src/util/transaction';
+import { DataSource, In, Repository } from 'typeorm';
 import { CreateGenreDto } from './dto/create-genre.dto';
 import { UpdateGenreDto } from './dto/update-genre.dto';
 import { Genre } from './entities/genre.entity';
 
 @Injectable()
 export class GenreService {
-  constructor(@InjectRepository(Genre) private readonly genreRepository: Repository<Genre>) {}
+  constructor(
+    @InjectRepository(Genre) private readonly genreRepository: Repository<Genre>,
+    private readonly dataSource: DataSource
+  ) {}
 
   async create(createGenreDto: CreateGenreDto) {
-    const newGenre = this.genreRepository.create(createGenreDto);
+    const newGenre = await transaction(this.dataSource, qr => {
+      return qr.manager.save(Genre, createGenreDto);
+    });
 
-    return this.genreRepository.save(newGenre);
+    return newGenre;
   }
 
   async findAll() {
@@ -20,7 +26,7 @@ export class GenreService {
   }
 
   async findOne(id: number) {
-    const genre = await this.genreRepository.findOne({ where: { id } });
+    const genre: Genre = await this.genreRepository.findOne({ where: { id } });
 
     if (!genre) {
       throw new NotFoundException(`Genre with id ${id} not found`);

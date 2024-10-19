@@ -82,7 +82,7 @@ export class MoviesService {
         genres.push(...newGenres);
       }
 
-      const newMovie = await qr.manager.save({
+      const newMovie = await qr.manager.save(Movie, {
         title: createMovieDto.title,
         detail: {
           detail: createMovieDto.detail,
