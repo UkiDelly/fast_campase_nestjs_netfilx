@@ -72,11 +72,17 @@ export class MoviesService {
 
     try {
       const director: Director = await qr.manager.findOne(Director, { where: { id: createMovieDto.directorId } });
-      const genres: Genre[] = await qr.manager.find(Genre, { where: { name: In(createMovieDto.genres) } }); //this.genreService.findGenresOrCreate(createMovieDto.genres);
+      const genres: Genre[] = await qr.manager.find(Genre, { where: { name: In(createMovieDto.genres) } });
+      const notExistGenres = createMovieDto.genres.filter(name => !genres.some(genre => genre.name === name));
 
-      await qr.commitTransaction();
+      // 존재하지 않는 장르를 생성
+      if (notExistGenres.length > 0) {
+        const newGenres = notExistGenres.map(name => qr.manager.create(Genre, { name }));
+        await qr.manager.save(newGenres);
+        genres.push(...newGenres);
+      }
 
-      return this.movieRepository.save({
+      const newMovie = await qr.manager.save({
         title: createMovieDto.title,
         detail: {
           detail: createMovieDto.detail,
@@ -84,6 +90,10 @@ export class MoviesService {
         genres,
         director,
       });
+
+      await qr.commitTransaction();
+
+      return newMovie;
     } catch (e) {
       await qr.rollbackTransaction();
       throw e;
