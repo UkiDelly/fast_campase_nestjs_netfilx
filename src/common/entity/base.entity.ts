@@ -1,4 +1,4 @@
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import { CreateDateColumn, UpdateDateColumn, VersionColumn } from 'typeorm';
 
 export class BaseTable {

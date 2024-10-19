@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'dotenv';
+import Joi from 'joi';
 import { DirectorModule } from './director/director.module';
 import { Director } from './director/entities/director.entity';
 import { Genre } from './genre/entities/genre.entity';
@@ -13,18 +15,19 @@ config();
 
 @Module({
   imports: [
-    // ConfigModule.forRoot({
-    //   envFilePath: '.env',
-    //   isGlobal: true,
-    //   validationSchema: Joi.object({
-    //     ENV: Joi.string().required().valid('dev', 'prod').default('dev'), // 환경 변수 검증
-    //     PORT: Joi.number().required().default(3000), // 포트 검증
-    //     DB_HOST: Joi.string().required(), // 데이터베이스 호스트 검증
-    //     DB_USER: Joi.string().required(), // 데이터베이스 사용자 검증
-    //     DB_PASSWORD: Joi.string().required(), // 데이터베이스 비밀번호 검증
-    //     DB_NAME: Joi.string().required(), // 데이터베이스 이름 검증
-    //   }),
-    // }),
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      isGlobal: true,
+      validationSchema: Joi.object({
+        ENV: Joi.string().required().valid('dev', 'prod').default('dev'), // 환경 변수 검증
+        DB_PORT: Joi.number().required().default(3000), // 포트 검증
+        DB_HOST: Joi.string().required(), // 데이터베이스 호스트 검증
+        DB_USER: Joi.string().required(), // 데이터베이스 사용자 검증
+        DB_PASSWORD: Joi.string().required(), // 데이터베이스 비밀번호 검증
+        DB_NAME: Joi.string().required(), // 데이터베이스 이름 검증
+        SCHEMA: Joi.string().required(), // 데이터베이스 스키마 검증
+      }),
+    }),
 
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -45,12 +48,12 @@ config();
     //   // useFactory를 사용하여 TypeORM 모듈을 반환
     //   useFactory: (configService: ConfigService) => ({
     //     type: 'postgres',
-    //     host: 'localhost', //configService.get('DB_HOST'),
+    //     host: 'localhost', //configService.get<string>('DB_HOST'),
     //     port: 5432, //configService.get<number>('DB_PORT'),
-    //     username: 'postgres', //configService.get('DB_USER'),
-    //     password: 'postgres', //configService.get('DB_PASSWORD'),
-    //     database: 'fastcampus', //configService.get('DB_NAME'),
-    //     schema: 'fastcampus', //configService.get('DB_NAME'),
+    //     username: 'postgres', //configService.get<string>('DB_USER'),
+    //     password: 'postgres', // configService.get<string>('DB_PASSWORD'),
+    //     database: 'fastcampus', //configService.get<string>('DB_NAME'),
+    //     schema: 'fastcampus', //configService.get<string>('SCHEMA'),
     //     synchronize: true,
     //     autoLoadEntities: true,
     //     entities: ['dist/**/*.entity{.ts,.js}', 'src/**/*.entity{.ts,.js}', Movie, MovieDetail],
