@@ -1,11 +1,15 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import { AppModule } from './app.module';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
   dayjs.locale('ko-KR');
 
   app.useGlobalPipes(

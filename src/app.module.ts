@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'dotenv';
 import Joi from 'joi';
+import { AuthModule } from './auth/auth.module';
 import { DirectorModule } from './director/director.module';
 import { Director } from './director/entities/director.entity';
 import { Genre } from './genre/entities/genre.entity';
@@ -10,6 +11,8 @@ import { GenreModule } from './genre/genre.module';
 import { Movie } from './movies/entities/movie.entity';
 import { MovieDetail } from './movies/entities/movie_detail.entity';
 import { MoviesModule } from './movies/movies.module';
+import { User } from './users/entities/user.entity';
+import { UsersModule } from './users/users.module';
 
 config();
 
@@ -26,6 +29,7 @@ config();
         DB_PASSWORD: Joi.string().required(), // 데이터베이스 비밀번호 검증
         DB_NAME: Joi.string().required(), // 데이터베이스 이름 검증
         SCHEMA: Joi.string().required(), // 데이터베이스 스키마 검증
+        SALT_ROUNDS: Joi.number().required(), // 데이터베이스 스키마 검증
       }),
     }),
 
@@ -39,7 +43,7 @@ config();
       schema: 'fastcampus', //configService.get('DB_NAME'),
       synchronize: true,
       autoLoadEntities: true,
-      entities: [Movie, MovieDetail, Director, Genre],
+      entities: [Movie, MovieDetail, Director, Genre, User],
       poolSize: 10,
     }),
     // TypeOrmModule.forRootAsync({
@@ -63,6 +67,8 @@ config();
     MoviesModule,
     DirectorModule,
     GenreModule,
+    UsersModule,
+    AuthModule,
     // ConfigModule이 초기화 이후 TypeOrmModule을 초기화하기 위해 forRootAsync를 사용
   ],
   controllers: [],
