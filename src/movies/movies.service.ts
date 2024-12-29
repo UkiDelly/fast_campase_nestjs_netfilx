@@ -176,14 +176,12 @@ export class MoviesService {
 
   // 쿼리빌더 사용하기
   async findAllQuery(title: string) {
-    const qb = await this.movieRepository
+    return await this.movieRepository
       .createQueryBuilder('movie')
       .leftJoinAndSelect('movie.detail', 'detail')
       .leftJoinAndSelect('movie.director', 'director')
       .leftJoinAndSelect('movie.genres', 'genres')
       .where('movie.title LIKE :title', { title: `%${title}%` })
       .getMany();
-
-    return qb;
   }
 }

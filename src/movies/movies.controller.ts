@@ -17,9 +17,7 @@ export class MoviesController {
 
   @Get(':id')
   getMovie(@Param('id', ParseIntPipe) id: number) {
-    const movie = this.moviesService.getMovieById(id);
-
-    return movie;
+    return this.moviesService.getMovieById(id);
   }
 
   @Post()
