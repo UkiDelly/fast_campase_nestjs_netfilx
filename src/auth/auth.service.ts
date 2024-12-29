@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import bcrypt from 'bcrypt';
@@ -19,6 +19,12 @@ export class AuthService {
     return bcrypt.hash(password, SALT_ROUNDS);
   }
 
+  /**
+   * 회원가입
+   * @param email
+   * @param password
+   * @returns
+   */
   async join(email: string, password: string) {
     const user = await this.userRepository.findOne({ where: { email } });
     if (user) {
@@ -31,9 +37,16 @@ export class AuthService {
     let newUser = this.userRepository.create({ email, password: hashedPassword });
     newUser = await this.userRepository.save(newUser);
 
-    // 민감 정보 삭제
-    delete newUser.password;
-
     return newUser;
+  }
+
+  async login(email: string, password: string) {
+    const hashedPassword = await this.hashPassword(password);
+    const user = await this.userRepository.findOne({ where: { email, password: hashedPassword } });
+    if (!user) {
+      throw new NotFoundException('존재하지 않는 이메일입니다.');
+    }
+
+    return user;
   }
 }

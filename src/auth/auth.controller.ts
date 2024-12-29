@@ -1,7 +1,8 @@
-import { BadRequestException, Controller, Headers, Post } from '@nestjs/common';
+import { BadRequestException, ClassSerializerInterceptor, Controller, Headers, Post, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
+@UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -25,5 +26,11 @@ export class AuthController {
     const { email, password } = this.parseBasicToken(rawToken);
 
     return this.authService.join(email, password);
+  }
+
+  @Post('login')
+  login(@Headers('authorization') rawToken: string) {
+    const { email, password } = this.parseBasicToken(rawToken);
+    return this.authService.login(email, password);
   }
 }
