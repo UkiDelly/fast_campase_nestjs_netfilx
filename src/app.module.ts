@@ -29,7 +29,9 @@ config();
         DB_PASSWORD: Joi.string().required(), // 데이터베이스 비밀번호 검증
         DB_NAME: Joi.string().required(), // 데이터베이스 이름 검증
         SCHEMA: Joi.string().required(), // 데이터베이스 스키마 검증
-        SALT_ROUNDS: Joi.number().required(), // 데이터베이스 스키마 검증
+        SALT_ROUNDS: Joi.number().required(),
+        ACCESS_TOKEN_SECRET: Joi.string().required(),
+        REFRESH_TOKEN_SECRET: Joi.string().required(),
       }),
     }),
 

@@ -1,16 +1,18 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import bcrypt from 'bcrypt';
 import { User } from 'src/users/entities/user.entity';
-import type { Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService
   ) {}
 
   private hashPassword(password: string) {
@@ -26,10 +28,7 @@ export class AuthService {
    * @returns
    */
   async join(email: string, password: string) {
-    const user = await this.userRepository.findOne({ where: { email } });
-    if (user) {
-      throw new ConflictException('이미 존재하는 이메일입니다.');
-    }
+    await this.authenticate(email, password);
 
     // 비밀번호 해싱
     const hashedPassword = await this.hashPassword(password);
@@ -41,8 +40,24 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    const hashedPassword = await this.hashPassword(password);
-    const user = await this.userRepository.findOne({ where: { email, password: hashedPassword } });
+    const user = await this.authenticate(email, password);
+    const accessTokenSecret = this.configService.get('ACCESS_TOKEN_SECRET');
+    const refreshTokenSecret = this.configService.get('REFRESH_TOKEN_SECRET');
+
+    const accessToken = await this.jwtService.signAsync(
+      { id: user.id, role: user.role, type: 'access' },
+      { secret: accessTokenSecret, expiresIn: '5m' }
+    );
+    const refreshToken = await this.jwtService.signAsync(
+      { id: user.id, role: user.role, type: 'refresh' },
+      { secret: refreshTokenSecret, expiresIn: '1d' }
+    );
+
+    return { accessToken, refreshToken };
+  }
+
+  async authenticate(email: string, password: string) {
+    const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
       throw new NotFoundException('존재하지 않는 이메일입니다.');
     }

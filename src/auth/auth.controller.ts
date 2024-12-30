@@ -1,4 +1,6 @@
-import { BadRequestException, ClassSerializerInterceptor, Controller, Headers, Post, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, ClassSerializerInterceptor, Controller, Headers, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import type { User } from 'src/users/entities/user.entity';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -32,5 +34,11 @@ export class AuthController {
   login(@Headers('authorization') rawToken: string) {
     const { email, password } = this.parseBasicToken(rawToken);
     return this.authService.login(email, password);
+  }
+
+  @UseGuards(AuthGuard('local'))
+  @Post('passport-login')
+  passportLogin(@Request() req: Request & { user: User }) {
+    return req.user;
   }
 }
