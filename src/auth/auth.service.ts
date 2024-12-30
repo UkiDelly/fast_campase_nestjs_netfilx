@@ -41,17 +41,9 @@ export class AuthService {
 
   async login(email: string, password: string) {
     const user = await this.authenticate(email, password);
-    const accessTokenSecret = this.configService.get('ACCESS_TOKEN_SECRET');
-    const refreshTokenSecret = this.configService.get('REFRESH_TOKEN_SECRET');
 
-    const accessToken = await this.jwtService.signAsync(
-      { id: user.id, role: user.role, type: 'access' },
-      { secret: accessTokenSecret, expiresIn: '5m' }
-    );
-    const refreshToken = await this.jwtService.signAsync(
-      { id: user.id, role: user.role, type: 'refresh' },
-      { secret: refreshTokenSecret, expiresIn: '1d' }
-    );
+    const accessToken = await this.issueToken(user, false);
+    const refreshToken = await this.issueToken(user, true);
 
     return { accessToken, refreshToken };
   }
@@ -63,5 +55,13 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  issueToken(user: User, isRefreshToken: boolean) {
+    const secret = isRefreshToken ? this.configService.get('REFRESH_TOKEN_SECRET') : this.configService.get('ACCESS_TOKEN_SECRET');
+
+    const expiresIn = isRefreshToken ? '1d' : '5m';
+
+    return this.jwtService.signAsync({ id: user.id, role: user.role, type: isRefreshToken ? 'refresh' : 'access' }, { secret, expiresIn });
   }
 }

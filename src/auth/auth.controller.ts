@@ -1,7 +1,8 @@
-import { BadRequestException, ClassSerializerInterceptor, Controller, Headers, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { BadRequestException, ClassSerializerInterceptor, Controller, Get, Headers, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
 import type { User } from 'src/users/entities/user.entity';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './strategy/JwtStrategy';
+import { LocalAuthGuard } from './strategy/LocalStrategy';
 
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -36,9 +37,18 @@ export class AuthController {
     return this.authService.login(email, password);
   }
 
-  @UseGuards(AuthGuard('local'))
+  @UseGuards(LocalAuthGuard)
   @Post('passport-login')
-  passportLogin(@Request() req: Request & { user: User }) {
+  async passportLogin(@Request() req: Request & { user: User }) {
+    const accessToken = await this.authService.issueToken(req.user, false);
+    const refreshToken = await this.authService.issueToken(req.user, true);
+
+    return { accessToken, refreshToken };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('private')
+  private(@Request() req: Request & { user: User }) {
     return req.user;
   }
 }
