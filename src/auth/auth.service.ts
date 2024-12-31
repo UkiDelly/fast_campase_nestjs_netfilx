@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -67,14 +67,18 @@ export class AuthService {
   }
 
   async rotateAccessToken(token: string) {
-    const decoded = await this.jwtService.verify(token, { secret: this.configService.get(REFRESH_TOKEN_SECRET) });
+    try {
+      const decoded = await this.jwtService.verify(token, { secret: this.configService.get(REFRESH_TOKEN_SECRET) });
 
-    if (decoded.type !== 'refresh') {
-      throw new BadRequestException('토큰 타입이 잘못 되었습니다.');
+      if (decoded.type !== 'refresh') {
+        throw new BadRequestException('토큰 타입이 잘못 되었습니다.');
+      }
+
+      const accessToken = await this.issueToken({ id: decoded.id, role: decoded.role }, false);
+
+      return { accessToken };
+    } catch (error) {
+      throw new UnauthorizedException('토큰이 만료되었습니다.');
     }
-
-    const accessToken = await this.issueToken({ id: decoded.id, role: decoded.role }, false);
-
-    return { accessToken };
   }
 }
