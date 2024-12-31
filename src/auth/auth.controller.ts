@@ -1,4 +1,5 @@
 import { BadRequestException, ClassSerializerInterceptor, Controller, Get, Headers, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ResponseData } from 'src/common/ResponseData.dto';
 import type { User } from 'src/users/entities/user.entity';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './strategy/JwtStrategy';
@@ -41,9 +42,11 @@ export class AuthController {
   }
 
   @Post('login')
-  login(@Headers('authorization') rawToken: string) {
+  async login(@Headers('authorization') rawToken: string) {
     const { email, password } = this.parseBasicToken(rawToken);
-    return this.authService.login(email, password);
+    const tokens = await this.authService.login(email, password);
+
+    return ResponseData.data(tokens);
   }
 
   @UseGuards(LocalAuthGuard)
@@ -52,7 +55,7 @@ export class AuthController {
     const accessToken = await this.authService.issueToken(req.user, false);
     const refreshToken = await this.authService.issueToken(req.user, true);
 
-    return { accessToken, refreshToken };
+    return ResponseData.data({ accessToken, refreshToken });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -62,9 +65,11 @@ export class AuthController {
   }
 
   @Post('token/access')
-  rotateAccessToken(@Headers('authorization') rawToken: string) {
+  async rotateAccessToken(@Headers('authorization') rawToken: string) {
     const token = this.parseBearerToken(rawToken);
 
-    return this.authService.rotateAccessToken(token);
+    const newToken = await this.authService.rotateAccessToken(token);
+
+    return ResponseData.data(newToken);
   }
 }
