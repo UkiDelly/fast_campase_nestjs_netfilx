@@ -24,6 +24,15 @@ export class AuthController {
     return { email, password };
   }
 
+  private parseBearerToken(rawToken: string) {
+    const [type, token] = rawToken.split(' ');
+    if (!token || type !== 'Bearer') {
+      throw new BadRequestException('토큰 포맷이 잘못 되었습니다.');
+    }
+
+    return token;
+  }
+
   @Post('join')
   join(@Headers('authorization') rawToken: string) {
     const { email, password } = this.parseBasicToken(rawToken);
@@ -50,5 +59,12 @@ export class AuthController {
   @Get('private')
   private(@Request() req: Request & { user: User }) {
     return req.user;
+  }
+
+  @Post('token/access')
+  rotateAccessToken(@Headers('authorization') rawToken: string) {
+    const token = this.parseBearerToken(rawToken);
+
+    return this.authService.rotateAccessToken(token);
   }
 }

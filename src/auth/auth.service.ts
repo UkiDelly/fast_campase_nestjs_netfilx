@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import bcrypt from 'bcrypt';
-import { User } from 'src/users/entities/user.entity';
+import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, SALT_ROUNDS } from 'src/common/const/env.const';
+import { User, type Role } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -16,9 +17,9 @@ export class AuthService {
   ) {}
 
   private hashPassword(password: string) {
-    const SALT_ROUNDS = this.configService.get('SALT_ROUNDS');
+    const salt = this.configService.get(SALT_ROUNDS);
 
-    return bcrypt.hash(password, SALT_ROUNDS);
+    return bcrypt.hash(password, salt);
   }
 
   /**
@@ -57,11 +58,23 @@ export class AuthService {
     return user;
   }
 
-  issueToken(user: User, isRefreshToken: boolean) {
-    const secret = isRefreshToken ? this.configService.get('REFRESH_TOKEN_SECRET') : this.configService.get('ACCESS_TOKEN_SECRET');
+  issueToken(user: { id: number; role: Role }, isRefreshToken: boolean) {
+    const secret = isRefreshToken ? this.configService.get(REFRESH_TOKEN_SECRET) : this.configService.get(ACCESS_TOKEN_SECRET);
 
     const expiresIn = isRefreshToken ? '1d' : '5m';
 
     return this.jwtService.signAsync({ id: user.id, role: user.role, type: isRefreshToken ? 'refresh' : 'access' }, { secret, expiresIn });
+  }
+
+  async rotateAccessToken(token: string) {
+    const decoded = await this.jwtService.verify(token, { secret: this.configService.get(REFRESH_TOKEN_SECRET) });
+
+    if (decoded.type !== 'refresh') {
+      throw new BadRequestException('토큰 타입이 잘못 되었습니다.');
+    }
+
+    const accessToken = await this.issueToken({ id: decoded.id, role: decoded.role }, false);
+
+    return { accessToken };
   }
 }
