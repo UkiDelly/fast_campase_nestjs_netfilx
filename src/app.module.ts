@@ -1,20 +1,22 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { config } from 'dotenv';
-import Joi from 'joi';
-import { AuthModule } from './auth/auth.module';
-import { DirectorModule } from './director/director.module';
-import { Director } from './director/entities/director.entity';
-import { Genre } from './genre/entities/genre.entity';
-import { GenreModule } from './genre/genre.module';
-import { Movie } from './movies/entities/movie.entity';
-import { MovieDetail } from './movies/entities/movie_detail.entity';
-import { MoviesModule } from './movies/movies.module';
-import { User } from './users/entities/user.entity';
-import { UsersModule } from './users/users.module';
+import { Module, RequestMethod, type MiddlewareConsumer, type NestModule } from '@nestjs/common'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+import { JwtService } from '@nestjs/jwt'
+import { TypeOrmModule } from '@nestjs/typeorm'
+import { config } from 'dotenv'
+import Joi from 'joi'
+import { AuthModule } from './auth/auth.module'
+import { DirectorModule } from './director/director.module'
+import { Director } from './director/entities/director.entity'
+import { Genre } from './genre/entities/genre.entity'
+import { GenreModule } from './genre/genre.module'
+import { Movie } from './movies/entities/movie.entity'
+import { MovieDetail } from './movies/entities/movie_detail.entity'
+import { MoviesModule } from './movies/movies.module'
+import { User } from './users/entities/user.entity'
+import { UsersModule } from './users/users.module'
+import { BearerTokenMiddleware } from './util/middlewares/bearertoken.middleware'
 
-config();
+config()
 
 @Module({
   imports: [
@@ -29,9 +31,9 @@ config();
         DB_PASSWORD: Joi.string().required(), // 데이터베이스 비밀번호 검증
         DB_NAME: Joi.string().required(), // 데이터베이스 이름 검증
         SCHEMA: Joi.string().required(), // 데이터베이스 스키마 검증
-        SALT_ROUNDS: Joi.number().required(),
-        ACCESS_TOKEN_SECRET: Joi.string().required(),
-        REFRESH_TOKEN_SECRET: Joi.string().required(),
+        // SALT_ROUNDS: Joi.number().required(),
+        // ACCESS_TOKEN_SECRET: Joi.string().required(),
+        // REFRESH_TOKEN_SECRET: Joi.string().required(),
       }),
     }),
 
@@ -48,24 +50,7 @@ config();
       entities: [Movie, MovieDetail, Director, Genre, User],
       poolSize: 10,
     }),
-    // TypeOrmModule.forRootAsync({
-    //   // ConfigService를 주입받아서 사용
-    //   inject: [ConfigService],
-    //   // useFactory를 사용하여 TypeORM 모듈을 반환
-    //   useFactory: (configService: ConfigService) => ({
-    //     type: 'postgres',
-    //     host: 'localhost', //configService.get<string>('DB_HOST'),
-    //     port: 5432, //configService.get<number>('DB_PORT'),
-    //     username: 'postgres', //configService.get<string>('DB_USER'),
-    //     password: 'postgres', // configService.get<string>('DB_PASSWORD'),
-    //     database: 'fastcampus', //configService.get<string>('DB_NAME'),
-    //     schema: 'fastcampus', //configService.get<string>('SCHEMA'),
-    //     synchronize: true,
-    //     autoLoadEntities: true,
-    //     entities: ['dist/**/*.entity{.ts,.js}', 'src/**/*.entity{.ts,.js}', Movie, MovieDetail],
-    //     poolSize: 10,
-    //   }),
-    // }),
+
     MoviesModule,
     DirectorModule,
     GenreModule,
@@ -74,6 +59,13 @@ config();
     // ConfigModule이 초기화 이후 TypeOrmModule을 초기화하기 위해 forRootAsync를 사용
   ],
   controllers: [],
-  providers: [],
+  providers: [JwtService, ConfigService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(BearerTokenMiddleware)
+      .exclude({ path: '/auth/login', method: RequestMethod.POST }, { path: '/auth/register', method: RequestMethod.POST })
+      .forRoutes('*')
+  }
+}

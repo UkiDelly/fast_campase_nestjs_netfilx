@@ -1,6 +1,7 @@
 {
   "singleQuote": true,
   "trailingComma": "es5",
+  "semi": false,
   "filepath": "src/**/*.{js,jsx,ts,tsx}",
   "arrowParens": "avoid",
   "printWidth": 150

@@ -1,11 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import bcrypt from 'bcrypt';
-import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, SALT_ROUNDS } from 'src/common/const/env.const';
-import { User, type Role } from 'src/users/entities/user.entity';
-import { Repository } from 'typeorm';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { JwtService } from '@nestjs/jwt'
+import { InjectRepository } from '@nestjs/typeorm'
+import bcrypt from 'bcrypt'
+import { SALT_ROUNDS } from 'src/common/const/env.const'
+import { User } from 'src/users/entities/user.entity'
+import type { DecodedToken } from 'src/util/types'
+import { Repository } from 'typeorm'
 
 @Injectable()
 export class AuthService {
@@ -17,9 +18,9 @@ export class AuthService {
   ) {}
 
   private hashPassword(password: string) {
-    const salt = this.configService.get(SALT_ROUNDS);
+    const salt = this.configService.get(SALT_ROUNDS)
 
-    return bcrypt.hash(password, salt);
+    return bcrypt.hash(password, salt)
   }
 
   /**
@@ -29,56 +30,51 @@ export class AuthService {
    * @returns
    */
   async join(email: string, password: string) {
-    await this.authenticate(email, password);
+    await this.authenticate(email, password)
 
     // 비밀번호 해싱
-    const hashedPassword = await this.hashPassword(password);
+    const hashedPassword = await this.hashPassword(password)
 
-    let newUser = this.userRepository.create({ email, password: hashedPassword });
-    newUser = await this.userRepository.save(newUser);
+    let newUser = this.userRepository.create({ email, password: hashedPassword })
+    newUser = await this.userRepository.save(newUser)
 
-    return newUser;
+    return newUser
   }
 
   async login(email: string, password: string) {
-    const user = await this.authenticate(email, password);
+    const user = await this.authenticate(email, password)
 
-    const accessToken = await this.issueToken(user, false);
-    const refreshToken = await this.issueToken(user, true);
+    const accessToken = await this.issueToken({ id: user.id, type: 'access' })
+    const refreshToken = await this.issueToken({ id: user.id, type: 'refresh' })
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken }
   }
 
   async authenticate(email: string, password: string) {
-    const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({ where: { email } })
     if (!user) {
-      throw new NotFoundException('존재하지 않는 이메일입니다.');
+      throw new NotFoundException('존재하지 않는 이메일입니다.')
     }
 
-    return user;
+    return user
   }
 
-  issueToken(user: { id: number; role: Role }, isRefreshToken: boolean) {
-    const secret = isRefreshToken ? this.configService.get(REFRESH_TOKEN_SECRET) : this.configService.get(ACCESS_TOKEN_SECRET);
+  issueToken(payload: { id: number; type: 'access' | 'refresh' }) {
+    const secret = this.configService.get('JWT_SECRET')
+    const isRefreshToken = payload.type === 'refresh'
 
-    const expiresIn = isRefreshToken ? '1d' : '5m';
+    const expiresIn = isRefreshToken ? '1d' : '5m'
 
-    return this.jwtService.signAsync({ id: user.id, role: user.role, type: isRefreshToken ? 'refresh' : 'access' }, { secret, expiresIn });
+    return this.jwtService.signAsync({ id: payload.id, type: isRefreshToken ? 'refresh' : 'access' }, { secret, expiresIn })
   }
 
-  async rotateAccessToken(token: string) {
+  async rotateAccessToken(payload: DecodedToken) {
     try {
-      const decoded = await this.jwtService.verify(token, { secret: this.configService.get(REFRESH_TOKEN_SECRET) });
+      const accessToken = await this.issueToken({ id: payload.id, type: 'access' })
 
-      if (decoded.type !== 'refresh') {
-        throw new BadRequestException('토큰 타입이 잘못 되었습니다.');
-      }
-
-      const accessToken = await this.issueToken({ id: decoded.id, role: decoded.role }, false);
-
-      return { accessToken };
+      return { accessToken }
     } catch (error) {
-      throw new UnauthorizedException('토큰이 만료되었습니다.');
+      throw new UnauthorizedException('토큰이 만료되었습니다.')
     }
   }
 }
