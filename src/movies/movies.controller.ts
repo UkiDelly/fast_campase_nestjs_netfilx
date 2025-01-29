@@ -1,8 +1,6 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, Req } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common'
 import { CreateMovieDto } from './dto/create-movie.dto'
 import { UpdateMovieDto } from './dto/update-movie.dto'
-
-import type { Request } from 'express'
 import { MoviesService } from './movies.service'
 import { MovieTitleValidationPipe } from './pipe/movie_title_validation.pipe'
 
@@ -12,8 +10,7 @@ export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 
   @Get()
-  getMovies(@Query('title', MovieTitleValidationPipe) title: string, @Req() req: Request) {
-    const user = req.user
+  getMovies(@Query('title', MovieTitleValidationPipe) title: string) {
     // return this.moviesService.getManyMovies(title);
     return this.moviesService.findAllQuery(title)
   }

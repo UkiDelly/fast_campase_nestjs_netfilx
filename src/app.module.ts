@@ -1,10 +1,12 @@
 import { Module, RequestMethod, type MiddlewareConsumer, type NestModule } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { APP_GUARD } from '@nestjs/core'
 import { JwtService } from '@nestjs/jwt'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { config } from 'dotenv'
 import Joi from 'joi'
 import { AuthModule } from './auth/auth.module'
+import { AuthGuard } from './auth/guard/auth.guard'
 import { DirectorModule } from './director/director.module'
 import { Director } from './director/entities/director.entity'
 import { Genre } from './genre/entities/genre.entity'
@@ -59,7 +61,7 @@ config()
     // ConfigModule이 초기화 이후 TypeOrmModule을 초기화하기 위해 forRootAsync를 사용
   ],
   controllers: [],
-  providers: [JwtService, ConfigService],
+  providers: [JwtService, ConfigService, { provide: APP_GUARD, useClass: AuthGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
