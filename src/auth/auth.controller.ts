@@ -15,6 +15,7 @@ import { ResponseData } from 'src/common/ResponseData.dto'
 import type { User } from 'src/users/entities/user.entity'
 import type { DecodedToken } from 'src/util/types'
 import { AuthService } from './auth.service'
+import { Public } from './decorator/public.decorator'
 import { JwtAuthGuard } from './strategy/JwtStrategy'
 import { LocalAuthGuard } from './strategy/LocalStrategy'
 
@@ -39,6 +40,7 @@ export class AuthController {
   }
 
   @Post('join')
+  @Public()
   join(@Headers('authorization') rawToken: string) {
     const { email, password } = this.parseBasicToken(rawToken)
 
@@ -46,6 +48,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Public()
   async login(@Headers('authorization') rawToken: string) {
     const { email, password } = this.parseBasicToken(rawToken)
     const tokens = await this.authService.login(email, password)
