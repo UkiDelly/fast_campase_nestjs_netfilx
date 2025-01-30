@@ -4,7 +4,7 @@ https://docs.nestjs.com/middleware#middleware
 
 import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { JwtService } from '@nestjs/jwt'
+import { JwtService, TokenExpiredError } from '@nestjs/jwt'
 import { Request, Response, type NextFunction } from 'express'
 
 @Injectable()
@@ -14,21 +14,23 @@ export class BearerTokenMiddleware implements NestMiddleware {
     private readonly configService: ConfigService
   ) {}
   async use(req: Request, res: Response, next: NextFunction) {
-    const [bearer, rawToken] = req.headers.authorization.split(' ')
-    if (!bearer || !rawToken) {
+    const token = req.headers.authorization
+
+    if (!token) {
       next()
       return
     }
 
-    if (bearer !== 'Bearer') {
-      throw new UnauthorizedException('토큰 형식이 올바르지 않습니다.')
-    }
-
-    if (!rawToken) {
-      throw new UnauthorizedException('토큰이 없습니다.')
-    }
-
     try {
+      const [bearer, rawToken] = token.split(' ')
+      if (bearer !== 'Bearer') {
+        throw new UnauthorizedException('토큰 형식이 올바르지 않습니다.')
+      }
+
+      if (!rawToken) {
+        throw new UnauthorizedException('토큰이 없습니다.')
+      }
+
       const decoded = await this.jwtService.verifyAsync(rawToken, { secret: this.configService.get<string>('JWT_SECRET') })
 
       // 토큰 타입 검증
@@ -55,10 +57,12 @@ export class BearerTokenMiddleware implements NestMiddleware {
       }
 
       req.user = decoded
-    } catch (error) {
-      throw new UnauthorizedException('토큰이 유효하지 않습니다.')
+    } catch (e) {
+      if (e instanceof TokenExpiredError) {
+        throw new UnauthorizedException('토큰이 만료되었습니다.')
+      }
+    } finally {
+      next()
     }
-
-    next()
   }
 }

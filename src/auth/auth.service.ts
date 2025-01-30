@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt'
 import { InjectRepository } from '@nestjs/typeorm'
 import bcrypt from 'bcrypt'
 import { SALT_ROUNDS } from 'src/common/const/env.const'
-import { User } from 'src/users/entities/user.entity'
+import { User, type Role } from 'src/users/entities/user.entity'
 import type { DecodedToken } from 'src/util/types'
 import { Repository } from 'typeorm'
 
@@ -44,8 +44,8 @@ export class AuthService {
   async login(email: string, password: string) {
     const user = await this.authenticate(email, password)
 
-    const accessToken = await this.issueToken({ id: user.id, type: 'access' })
-    const refreshToken = await this.issueToken({ id: user.id, type: 'refresh' })
+    const accessToken = await this.issueToken({ id: user.id, type: 'access', role: user.role })
+    const refreshToken = await this.issueToken({ id: user.id, type: 'refresh', role: user.role })
 
     return { accessToken, refreshToken }
   }
@@ -59,7 +59,7 @@ export class AuthService {
     return user
   }
 
-  issueToken(payload: { id: number; type: 'access' | 'refresh' }) {
+  issueToken(payload: { id: number; type: 'access' | 'refresh'; role: Role }) {
     const secret = this.configService.get('JWT_SECRET')
     const isRefreshToken = payload.type === 'refresh'
 
@@ -70,7 +70,7 @@ export class AuthService {
 
   async rotateAccessToken(payload: DecodedToken) {
     try {
-      const accessToken = await this.issueToken({ id: payload.id, type: 'access' })
+      const accessToken = await this.issueToken({ id: payload.id, type: 'access', role: payload.role })
 
       return { accessToken }
     } catch (error) {

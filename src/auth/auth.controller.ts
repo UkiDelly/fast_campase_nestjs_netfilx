@@ -59,8 +59,8 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('passport-login')
   async passportLogin(@Req() req: Request & { user: User }) {
-    const accessToken = await this.authService.issueToken({ id: req.user.id, type: 'access' })
-    const refreshToken = await this.authService.issueToken({ id: req.user.id, type: 'refresh' })
+    const accessToken = await this.authService.issueToken({ id: req.user.id, type: 'access', role: req.user.role })
+    const refreshToken = await this.authService.issueToken({ id: req.user.id, type: 'refresh', role: req.user.role })
 
     return ResponseData.data({ accessToken, refreshToken })
   }

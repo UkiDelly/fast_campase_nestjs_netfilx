@@ -7,6 +7,7 @@ import { config } from 'dotenv'
 import Joi from 'joi'
 import { AuthModule } from './auth/auth.module'
 import { AuthGuard } from './auth/guard/auth.guard'
+import { RbacGuard } from './auth/guard/rbac.guard'
 import { DirectorModule } from './director/director.module'
 import { Director } from './director/entities/director.entity'
 import { Genre } from './genre/entities/genre.entity'
@@ -61,7 +62,14 @@ config()
     // ConfigModule이 초기화 이후 TypeOrmModule을 초기화하기 위해 forRootAsync를 사용
   ],
   controllers: [],
-  providers: [JwtService, ConfigService, { provide: APP_GUARD, useClass: AuthGuard }],
+  providers: [
+    JwtService,
+    ConfigService,
+    // AuthGuard을 먼저 실행하고
+    { provide: APP_GUARD, useClass: AuthGuard },
+    // RBACGuard을 두번째로 실행
+    { provide: APP_GUARD, useClass: RbacGuard },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
