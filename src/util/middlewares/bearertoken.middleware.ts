@@ -34,7 +34,7 @@ export class BearerTokenMiddleware implements NestMiddleware {
       const decoded = await this.jwtService.verifyAsync(rawToken, { secret: this.configService.get<string>('JWT_SECRET') })
 
       // 토큰 타입 검증
-      if (decoded.type !== 'access' || decoded.type !== 'refresh') {
+      if (decoded.type !== 'access' && decoded.type !== 'refresh') {
         throw new UnauthorizedException('토큰이 유효하지 않습니다.')
       }
 
@@ -57,12 +57,13 @@ export class BearerTokenMiddleware implements NestMiddleware {
       }
 
       req.user = decoded
+      next()
     } catch (e) {
       if (e instanceof TokenExpiredError) {
         throw new UnauthorizedException('토큰이 만료되었습니다.')
+      } else {
+        next()
       }
-    } finally {
-      next()
     }
   }
 }

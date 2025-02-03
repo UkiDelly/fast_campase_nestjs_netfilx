@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
 import { InjectRepository } from '@nestjs/typeorm'
@@ -17,8 +17,9 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  private hashPassword(password: string) {
-    const salt = this.configService.get(SALT_ROUNDS)
+  private async hashPassword(password: string) {
+    const saltRounds = Number(this.configService.get(SALT_ROUNDS))
+    const salt = await bcrypt.genSalt(saltRounds)
 
     return bcrypt.hash(password, salt)
   }
@@ -30,7 +31,17 @@ export class AuthService {
    * @returns
    */
   async join(email: string, password: string) {
-    await this.authenticate(email, password)
+    try {
+      const user = await this.authenticate(email, password)
+
+      if (user) {
+        throw new ConflictException('이미 존재하는 이메일입니다.')
+      }
+    } catch (e) {
+      if (e instanceof ConflictException) {
+        throw e
+      }
+    }
 
     // 비밀번호 해싱
     const hashedPassword = await this.hashPassword(password)
