@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { transaction } from 'src/util/transaction';
-import { DataSource, In, Repository } from 'typeorm';
-import { CreateGenreDto } from './dto/create-genre.dto';
-import { UpdateGenreDto } from './dto/update-genre.dto';
-import { Genre } from './entities/genre.entity';
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { transaction } from 'src/util/transaction'
+import { DataSource, In, Repository } from 'typeorm'
+import { CreateGenreDto } from './dto/create-genre.dto'
+import { UpdateGenreDto } from './dto/update-genre.dto'
+import { Genre } from './entities/genre.entity'
 
 @Injectable()
 export class GenreService {
@@ -15,37 +15,37 @@ export class GenreService {
 
   async create(createGenreDto: CreateGenreDto) {
     const newGenre = await transaction(this.dataSource, qr => {
-      return qr.manager.save(Genre, createGenreDto);
-    });
+      return qr.manager.save(Genre, createGenreDto)
+    })
 
-    return newGenre;
+    return newGenre
   }
 
   async findAll() {
-    return this.genreRepository.find();
+    return this.genreRepository.find()
   }
 
   async findOne(id: number) {
-    const genre: Genre = await this.genreRepository.findOne({ where: { id } });
+    const genre: Genre = await this.genreRepository.findOne({ where: { id } })
 
     if (!genre) {
-      throw new NotFoundException(`Genre with id ${id} not found`);
+      throw new NotFoundException(`Genre with id ${id} not found`)
     }
 
-    return genre;
+    return genre
   }
 
   async update(id: number, updateGenreDto: UpdateGenreDto) {
-    await this.findOne(id);
-    await this.genreRepository.update(id, updateGenreDto);
+    await this.findOne(id)
+    await this.genreRepository.update(id, updateGenreDto)
 
-    return this.findOne(id);
+    return this.findOne(id)
   }
 
   async remove(id: number) {
-    await this.genreRepository.delete(id);
+    await this.genreRepository.delete(id)
 
-    return { id };
+    return { id }
   }
 
   async findGenresOrCreate(names: string[]) {
@@ -55,20 +55,20 @@ export class GenreService {
       where: {
         name: In(names),
       },
-    });
+    })
 
     // 존재하지 않는 장르를 생성
-    const notFoundGenres: string[] = names.filter(name => !genres.some(genre => genre.name === name));
+    const notFoundGenres: string[] = names.filter(name => !genres.some(genre => genre.name === name))
 
     // 존재하지 않는 장르가 없다면 반환
     if (notFoundGenres.length === 0) {
-      return genres;
+      return genres
     }
 
     // 존재하지 않는 장르를 생성
-    let newGenres: Genre[] = notFoundGenres.map(name => this.genreRepository.create({ name }));
-    newGenres = await this.genreRepository.save(newGenres);
+    let newGenres: Genre[] = notFoundGenres.map(name => this.genreRepository.create({ name }))
+    newGenres = await this.genreRepository.save(newGenres)
 
-    return [...genres, ...newGenres];
+    return [...genres, ...newGenres]
   }
 }

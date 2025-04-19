@@ -1,12 +1,12 @@
-import { PartialType } from '@nestjs/mapped-types';
+import { PartialType } from '@nestjs/mapped-types'
 import {
   registerDecorator,
   ValidatorConstraint,
   type ValidationArguments,
   type ValidationOptions,
   type ValidatorConstraintInterface,
-} from 'class-validator';
-import { CreateMovieDto } from './create-movie.dto';
+} from 'class-validator'
+import { CreateMovieDto } from './create-movie.dto'
 
 // 커스텀 Validator
 @ValidatorConstraint({ async: false }) // 비동기로 처리할지 여부
@@ -14,10 +14,10 @@ class PasswordValidator implements ValidatorConstraintInterface {
   validate(value: any, validationArguments?: ValidationArguments): Promise<boolean> | boolean {
     /// 비밀번호 길이는 4-8
 
-    return (value as string).length > 4 && (value as string).length < 8;
+    return (value as string).length > 4 && (value as string).length < 8
   }
   defaultMessage?(validationArguments?: ValidationArguments): string {
-    return '비밀번호는 4-8자여야 합니다. 입력된 값: $value'; // $value는 입력된 값
+    return '비밀번호는 4-8자여야 합니다. 입력된 값: $value' // $value는 입력된 값
   }
 }
 
@@ -29,8 +29,8 @@ function IsPasswordValid(validationOptions?: ValidationOptions) {
       propertyName: propertyName,
       options: validationOptions,
       validator: PasswordValidator,
-    });
-  };
+    })
+  }
 }
 
 export class UpdateMovieDto extends PartialType(CreateMovieDto) {

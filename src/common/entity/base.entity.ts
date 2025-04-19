@@ -1,6 +1,6 @@
-import { Exclude } from 'class-transformer';
-import dayjs from 'dayjs';
-import { CreateDateColumn, UpdateDateColumn, VersionColumn } from 'typeorm';
+import { Exclude } from 'class-transformer'
+import dayjs from 'dayjs'
+import { CreateDateColumn, UpdateDateColumn, VersionColumn } from 'typeorm'
 
 export class BaseTable {
   @CreateDateColumn({
@@ -11,7 +11,7 @@ export class BaseTable {
       from: (value: Date) => dayjs(value).format('YYYY-MM-DD hh:mm:ss A'),
     },
   })
-  createdAt: Date;
+  createdAt: Date
 
   @Exclude()
   @UpdateDateColumn({
@@ -22,9 +22,9 @@ export class BaseTable {
       from: (value: Date) => dayjs(value).format('YYYY-MM-DD hh:mm:ss A'),
     },
   })
-  updatedAt: Date;
+  updatedAt: Date
 
   @Exclude()
   @VersionColumn()
-  version: number;
+  version: number
 }

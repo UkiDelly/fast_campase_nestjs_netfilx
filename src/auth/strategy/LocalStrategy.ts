@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { AuthGuard, PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-local';
-import type { User } from 'src/users/entities/user.entity';
-import { AuthService } from '../auth.service';
+import { Injectable } from '@nestjs/common'
+import { AuthGuard, PassportStrategy } from '@nestjs/passport'
+import { Strategy } from 'passport-local'
+import type { User } from 'src/users/entities/user.entity'
+import { AuthService } from '../auth.service'
 
-export const LocalAuthGuard = AuthGuard('local');
+export const LocalAuthGuard = AuthGuard('local')
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
@@ -12,7 +12,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     super({
       usernameField: 'email',
       passwordField: 'password',
-    });
+    })
   }
 
   /**
@@ -22,7 +22,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
    * 반환하는 값은 Request 객체에 저장된다.
    */
   async validate(username: string, password: string): Promise<User> {
-    const user = await this.authService.authenticate(username, password);
-    return user;
+    const user = await this.authService.authenticate(username, password)
+    return user
   }
 }
