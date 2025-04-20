@@ -1,6 +1,6 @@
 import { Module, RequestMethod, type MiddlewareConsumer, type NestModule } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { APP_GUARD } from '@nestjs/core'
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { JwtService } from '@nestjs/jwt'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { config } from 'dotenv'
@@ -8,6 +8,7 @@ import Joi from 'joi'
 import { AuthModule } from './auth/auth.module'
 import { AuthGuard } from './auth/guard/auth.guard'
 import { RbacGuard } from './auth/guard/rbac.guard'
+import { ResponseTimeInterceptor } from './common/intercepter/response-time.interceptor'
 import { DirectorModule } from './director/director.module'
 import { Director } from './director/entities/director.entity'
 import { Genre } from './genre/entities/genre.entity'
@@ -69,6 +70,8 @@ config()
     { provide: APP_GUARD, useClass: AuthGuard },
     // RBACGuard을 두번째로 실행
     { provide: APP_GUARD, useClass: RbacGuard },
+    // 응답 시간 측정
+    { provide: APP_INTERCEPTOR, useClass: ResponseTimeInterceptor },
   ],
 })
 export class AppModule implements NestModule {
