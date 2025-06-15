@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module'
 import { AuthGuard } from './auth/guard/auth.guard'
 import { RbacGuard } from './auth/guard/rbac.guard'
 import { ForbiddenExceptionFilter } from './common/filter/Forbidden.filter.js'
+import { QueryFailedExceptionFilter } from './common/filter/QueryFailed.filter.js'
 import { ResponseTimeInterceptor } from './common/intercepter/response-time.interceptor'
 import { DirectorModule } from './director/director.module'
 import { Director } from './director/entities/director.entity'
@@ -75,6 +76,7 @@ config()
     { provide: APP_INTERCEPTOR, useClass: ResponseTimeInterceptor },
     // 예외 필터
     { provide: APP_FILTER, useClass: ForbiddenExceptionFilter },
+    { provide: APP_FILTER, useClass: QueryFailedExceptionFilter },
   ],
 })
 export class AppModule implements NestModule {
