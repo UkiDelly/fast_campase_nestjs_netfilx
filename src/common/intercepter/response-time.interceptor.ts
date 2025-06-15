@@ -6,7 +6,7 @@ import { CallHandler, ExecutionContext, Injectable, InternalServerErrorException
 import dayjs from 'dayjs'
 import type { Request } from 'express'
 import { Observable } from 'rxjs'
-import { delay, tap } from 'rxjs/operators'
+import { tap } from 'rxjs/operators'
 
 @Injectable()
 export class ResponseTimeInterceptor implements NestInterceptor {
@@ -15,7 +15,6 @@ export class ResponseTimeInterceptor implements NestInterceptor {
     const start = dayjs()
 
     return next.handle().pipe(
-      delay(1000),
       tap(() => {
         const responseTime = dayjs()
         const diff = responseTime.diff(start, 'ms')

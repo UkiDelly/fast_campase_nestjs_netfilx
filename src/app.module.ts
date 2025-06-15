@@ -1,6 +1,6 @@
 import { Module, RequestMethod, type MiddlewareConsumer, type NestModule } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { JwtService } from '@nestjs/jwt'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { config } from 'dotenv'
@@ -8,6 +8,7 @@ import Joi from 'joi'
 import { AuthModule } from './auth/auth.module'
 import { AuthGuard } from './auth/guard/auth.guard'
 import { RbacGuard } from './auth/guard/rbac.guard'
+import { ForbiddenExceptionFilter } from './common/filter/Forbidden.filter.js'
 import { ResponseTimeInterceptor } from './common/intercepter/response-time.interceptor'
 import { DirectorModule } from './director/director.module'
 import { Director } from './director/entities/director.entity'
@@ -72,6 +73,8 @@ config()
     { provide: APP_GUARD, useClass: RbacGuard },
     // 응답 시간 측정
     { provide: APP_INTERCEPTOR, useClass: ResponseTimeInterceptor },
+    // 예외 필터
+    { provide: APP_FILTER, useClass: ForbiddenExceptionFilter },
   ],
 })
 export class AppModule implements NestModule {
