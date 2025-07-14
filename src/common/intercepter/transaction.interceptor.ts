@@ -3,6 +3,7 @@ https://docs.nestjs.com/interceptors#interceptors
 */
 
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common'
+import type { Request } from 'express'
 import { catchError, Observable, tap } from 'rxjs'
 import { DataSource } from 'typeorm'
 

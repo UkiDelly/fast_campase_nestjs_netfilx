@@ -1,7 +1,22 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseInterceptors } from '@nestjs/common'
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { Public } from 'src/auth/decorator/public.decorator'
 import { RBAC } from 'src/auth/decorator/rbac.decorator'
 import { CacheInterceptor } from 'src/common/intercepter/cache.interceptor'
+import { TransactionInterceptor } from 'src/common/intercepter/transaction.interceptor'
 import { Role } from 'src/users/entities/user.entity'
 import { CreateMovieDto } from './dto/create-movie.dto'
 import { UpdateMovieDto } from './dto/update-movie.dto'
@@ -39,12 +54,16 @@ export class MoviesController {
 
   @Post()
   @RBAC(Role.ADMIN)
-  postMovie(@Body() body: CreateMovieDto) {
+  @UseInterceptors(TransactionInterceptor)
+  @UseInterceptors(FileInterceptor('movie'))
+  postMovie(@Body() body: CreateMovieDto, @UploadedFile() file: Express.Multer.File) {
+    console.table(file)
     return this.moviesService.createMovie(body)
   }
 
   @Patch(':id')
   @RBAC(Role.ADMIN)
+  @UseInterceptors(TransactionInterceptor)
   patchMovie(@Param('id', ParseIntPipe) id: number, @Body() body: UpdateMovieDto) {
     return this.moviesService.updateMovie(id, body)
   }
