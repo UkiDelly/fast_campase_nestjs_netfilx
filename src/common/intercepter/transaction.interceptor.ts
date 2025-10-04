@@ -5,7 +5,16 @@ https://docs.nestjs.com/interceptors#interceptors
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common'
 import type { Request } from 'express'
 import { catchError, Observable, tap } from 'rxjs'
-import { DataSource } from 'typeorm'
+import { DataSource, type QueryRunner } from 'typeorm'
+
+declare global {
+  //@ts-ignore
+  namespace Express {
+    interface Request {
+      qr: QueryRunner
+    }
+  }
+}
 
 @Injectable()
 export class TransactionInterceptor implements NestInterceptor {
@@ -19,7 +28,6 @@ export class TransactionInterceptor implements NestInterceptor {
     await qr.startTransaction()
 
     // 트랜잭션 객체를 요청 객체에 추가
-    // @ts-expect-error 타입 정의가 없는 경우 사용
     req.qr = qr
 
     return next.handle().pipe(
