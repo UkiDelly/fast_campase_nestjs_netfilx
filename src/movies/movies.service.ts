@@ -64,7 +64,7 @@ export class MoviesService {
    *
    * @param createMovieDto
    */
-  async createMovie(createMovieDto: CreateMovieDto) {
+  async createMovie(createMovieDto: CreateMovieDto, movieFileName: string) {
     // 트랜잭션 설정
     const qr = this.datasource.createQueryRunner()
     await qr.connect()
@@ -89,6 +89,7 @@ export class MoviesService {
         },
         genres,
         director,
+        movieFilePath: movieFileName,
       })
 
       await qr.commitTransaction()

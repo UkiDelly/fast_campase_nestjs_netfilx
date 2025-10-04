@@ -27,4 +27,7 @@ export class Movie extends BaseTable {
   @ManyToOne(() => Director, director => director.movies, { cascade: true })
   @JoinColumn({ name: 'director_id' })
   director: Director | any
+
+  @Column({ nullable: true, name: 'movie_file_path' })
+  movieFilePath: string
 }
