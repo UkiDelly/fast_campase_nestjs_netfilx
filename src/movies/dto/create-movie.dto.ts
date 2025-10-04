@@ -17,4 +17,8 @@ export class CreateMovieDto {
   @ArrayNotEmpty()
   @IsString({ each: true })
   genres: string[]
+
+  @IsString()
+  @IsNotEmpty()
+  movieFilePath: string
 }

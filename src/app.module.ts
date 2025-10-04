@@ -2,12 +2,15 @@ import { Module, RequestMethod, type MiddlewareConsumer, type NestModule } from 
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { JwtService } from '@nestjs/jwt'
+import { ServeStaticModule } from '@nestjs/serve-static'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { config } from 'dotenv'
 import Joi from 'joi'
+import path from 'path'
 import { AuthModule } from './auth/auth.module'
 import { AuthGuard } from './auth/guard/auth.guard'
 import { RbacGuard } from './auth/guard/rbac.guard'
+import { CommonModule } from './common/common.module'
 import { ForbiddenExceptionFilter } from './common/filter/Forbidden.filter.js'
 import { QueryFailedExceptionFilter } from './common/filter/QueryFailed.filter.js'
 import { ResponseTimeInterceptor } from './common/intercepter/response-time.interceptor'
@@ -56,12 +59,18 @@ config()
       entities: [Movie, MovieDetail, Director, Genre, User],
       poolSize: 10,
     }),
-
+    ServeStaticModule.forRoot({
+      rootPath: path.join(process.cwd(), 'public'),
+      // 정적 파일을 제공할 때 URL 경로의 루트(prefix)를 '/public/'으로 설정합니다.
+      // 예를 들어, public 디렉토리 내의 파일은 http://localhost:포트/public/파일명 으로 접근할 수 있습니다.
+      serveRoot: '/public/',
+    }),
     MoviesModule,
     DirectorModule,
     GenreModule,
     UsersModule,
     AuthModule,
+    CommonModule,
     // ConfigModule이 초기화 이후 TypeOrmModule을 초기화하기 위해 forRootAsync를 사용
   ],
   controllers: [],
