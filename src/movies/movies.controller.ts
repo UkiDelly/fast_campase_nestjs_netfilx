@@ -1,9 +1,12 @@
 import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseInterceptors } from '@nestjs/common'
 import { Public } from 'src/auth/decorator/public.decorator'
 import { RBAC } from 'src/auth/decorator/rbac.decorator'
+import { QueryRunner } from 'src/common/decorator/query-runner.decorator'
 import { CacheInterceptor } from 'src/common/intercepter/cache.interceptor'
 import { TransactionInterceptor } from 'src/common/intercepter/transaction.interceptor'
+import { UserId } from 'src/users/decorator/user-id.decorator'
 import { Role } from 'src/users/entities/user.entity'
+import type { QueryRunner as QueryRunnerType } from 'typeorm'
 import { CreateMovieDto } from './dto/create-movie.dto'
 import { UpdateMovieDto } from './dto/update-movie.dto'
 import { MoviesService } from './movies.service'
@@ -41,9 +44,9 @@ export class MoviesController {
   @Post()
   @RBAC(Role.ADMIN)
   @UseInterceptors(TransactionInterceptor)
-  postMovie(@Body() body: CreateMovieDto) {
+  postMovie(@Body() body: CreateMovieDto, @UserId() userId: number, @QueryRunner() qr: QueryRunnerType) {
     console.table(body)
-    return this.moviesService.createMovie(body, body.movieFilePath)
+    return this.moviesService.createMovie(body, body.movieFilePath, userId)
   }
 
   @Patch(':id')

@@ -1,4 +1,5 @@
 import { Director } from 'src/director/entities/director.entity'
+import { User } from 'src/users/entities/user.entity'
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm'
 import { BaseTable } from '../../common/entity/base.entity'
 import { Genre } from '../../genre/entities/genre.entity'
@@ -30,4 +31,8 @@ export class Movie extends BaseTable {
 
   @Column({ nullable: true, name: 'movie_file_path' })
   movieFilePath: string
+
+  @ManyToOne(() => User, user => user.movies, { cascade: true })
+  @JoinColumn()
+  creator: User
 }

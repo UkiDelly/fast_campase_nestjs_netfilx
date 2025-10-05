@@ -1,6 +1,7 @@
 import { Exclude } from 'class-transformer'
 import { BaseTable } from 'src/common/entity/base.entity'
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import { Movie } from 'src/movies/entities/movie.entity'
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 
 export enum Role {
   ADMIN = 'admin',
@@ -24,4 +25,7 @@ export class User extends BaseTable {
 
   @Column({ enum: Role, default: Role.USER })
   role: Role
+
+  @OneToMany(() => Movie, movie => movie.creator)
+  movies: Movie[]
 }

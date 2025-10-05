@@ -49,7 +49,7 @@ export class MoviesService {
   async getMovieById(id: number) {
     const movie = await this.movieRepository.findOne({
       where: { id },
-      relations: { detail: true, director: true, genres: true },
+      relations: { detail: true, director: true, genres: true, creator: true },
     })
 
     if (!movie) {
@@ -64,7 +64,7 @@ export class MoviesService {
    *
    * @param createMovieDto
    */
-  async createMovie(createMovieDto: CreateMovieDto, movieFileName: string) {
+  async createMovie(createMovieDto: CreateMovieDto, movieFileName: string, userId: number) {
     // 트랜잭션 설정
     const qr = this.datasource.createQueryRunner()
     await qr.connect()
@@ -90,6 +90,7 @@ export class MoviesService {
         genres,
         director,
         movieFilePath: movieFileName,
+        creator: { id: userId },
       })
 
       await qr.commitTransaction()
