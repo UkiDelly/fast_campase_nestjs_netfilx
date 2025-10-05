@@ -5,6 +5,8 @@ import { Genre } from 'src/genre/entities/genre.entity'
 import { DataSource, In, Like, Repository } from 'typeorm'
 import { CreateMovieDto } from './dto/create-movie.dto'
 import type { UpdateMovieDto } from './dto/update-movie.dto'
+import { MovieUserDislike } from './entities/movie-user-dislike.entity'
+import { MovieUserLike } from './entities/movie-user-like.entity'
 import { Movie } from './entities/movie.entity'
 import { MovieDetail } from './entities/movie_detail.entity'
 
@@ -19,7 +21,11 @@ export class MoviesService {
     private readonly directorRepository: Repository<Director>,
     @InjectRepository(Genre)
     private readonly genreRepository: Repository<Genre>,
-    private readonly datasource: DataSource
+    private readonly datasource: DataSource,
+    @InjectRepository(MovieUserLike)
+    private readonly movieUserLikeRepository: Repository<MovieUserLike>,
+    @InjectRepository(MovieUserDislike)
+    private readonly movieUserDislikeRepository: Repository<MovieUserDislike>
   ) {}
 
   /**
@@ -185,5 +191,30 @@ export class MoviesService {
       .leftJoinAndSelect('movie.genres', 'genres')
       .where('movie.title LIKE :title', { title: `%${title}%` })
       .getMany()
+  }
+
+  // ============================== 좋아요 / 싫어요 ==============================
+  /**
+   * 영화 좋아요 및 좋아요 취소
+   */
+  async likeMovie(id: number, userId: number) {
+    const movie: MovieUserLike | null = await this.movieUserLikeRepository.findOne({ where: { movie: { id }, user: { id: userId } } })
+    if (movie) {
+      await this.movieUserLikeRepository.remove(movie)
+    } else {
+      await this.movieUserLikeRepository.save({ movie: { id }, user: { id: userId } })
+    }
+  }
+
+  /**
+   * 영화 싫어요 및 싫어요 취소
+   */
+  async dislikeMovie(id: number, userId: number) {
+    const movie: MovieUserDislike | null = await this.movieUserDislikeRepository.findOne({ where: { movie: { id }, user: { id: userId } } })
+    if (movie) {
+      await this.movieUserDislikeRepository.remove(movie)
+    } else {
+      await this.movieUserDislikeRepository.save({ movie: { id }, user: { id: userId } })
+    }
   }
 }

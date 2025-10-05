@@ -4,6 +4,7 @@ import { RBAC } from 'src/auth/decorator/rbac.decorator'
 import { QueryRunner } from 'src/common/decorator/query-runner.decorator'
 import { CacheInterceptor } from 'src/common/intercepter/cache.interceptor'
 import { TransactionInterceptor } from 'src/common/intercepter/transaction.interceptor'
+import { ResponseData } from 'src/common/ResponseData.dto'
 import { UserId } from 'src/users/decorator/user-id.decorator'
 import { Role } from 'src/users/entities/user.entity'
 import type { QueryRunner as QueryRunnerType } from 'typeorm'
@@ -60,5 +61,22 @@ export class MoviesController {
   @RBAC(Role.ADMIN)
   deleteMovie(@Param('id', ParseIntPipe) id: number) {
     return this.moviesService.deleteMovie(id)
+  }
+
+  // ============================== 좋아요 / 싫어요 ==============================
+  @Post(':id/like')
+  @RBAC(Role.USER)
+  async likeMovie(@Param('id', ParseIntPipe) id: number, @UserId() userId: number) {
+    await this.moviesService.likeMovie(id, userId)
+
+    return ResponseData.success()
+  }
+
+  @Post(':id/dislike')
+  @RBAC(Role.USER)
+  async dislikeMovie(@Param('id', ParseIntPipe) id: number, @UserId() userId: number) {
+    await this.moviesService.dislikeMovie(id, userId)
+
+    return ResponseData.success()
   }
 }
