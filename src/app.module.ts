@@ -18,6 +18,8 @@ import { DirectorModule } from './director/director.module'
 import { Director } from './director/entities/director.entity'
 import { Genre } from './genre/entities/genre.entity'
 import { GenreModule } from './genre/genre.module'
+import { MovieUserDislike } from './movies/entities/movie-user-dislike.entity'
+import { MovieUserLike } from './movies/entities/movie-user-like.entity'
 import { Movie } from './movies/entities/movie.entity'
 import { MovieDetail } from './movies/entities/movie_detail.entity'
 import { MoviesModule } from './movies/movies.module'
@@ -56,7 +58,7 @@ config()
       schema: 'fastcampus', //configService.get('DB_NAME'),
       synchronize: true,
       autoLoadEntities: true,
-      entities: [Movie, MovieDetail, Director, Genre, User],
+      entities: [Movie, MovieDetail, Director, Genre, User, MovieUserLike, MovieUserDislike],
       poolSize: 10,
     }),
     ServeStaticModule.forRoot({

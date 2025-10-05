@@ -1,5 +1,7 @@
 import { Exclude } from 'class-transformer'
 import { BaseTable } from 'src/common/entity/base.entity'
+import { MovieUserDislike } from 'src/movies/entities/movie-user-dislike.entity'
+import { MovieUserLike } from 'src/movies/entities/movie-user-like.entity'
 import { Movie } from 'src/movies/entities/movie.entity'
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 
@@ -28,4 +30,10 @@ export class User extends BaseTable {
 
   @OneToMany(() => Movie, movie => movie.creator)
   movies: Movie[]
+
+  @OneToMany(() => MovieUserLike, movieLike => movieLike.user)
+  likes: MovieUserLike[]
+
+  @OneToMany(() => MovieUserDislike, movieDislike => movieDislike.user)
+  dislikes: MovieUserDislike[]
 }

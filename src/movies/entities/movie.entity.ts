@@ -1,8 +1,10 @@
 import { Director } from 'src/director/entities/director.entity'
 import { User } from 'src/users/entities/user.entity'
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm'
 import { BaseTable } from '../../common/entity/base.entity'
 import { Genre } from '../../genre/entities/genre.entity'
+import { MovieUserDislike } from './movie-user-dislike.entity'
+import { MovieUserLike } from './movie-user-like.entity'
 import { MovieDetail } from './movie_detail.entity'
 
 @Entity()
@@ -35,4 +37,10 @@ export class Movie extends BaseTable {
   @ManyToOne(() => User, user => user.movies, { cascade: true })
   @JoinColumn()
   creator: User
+
+  @OneToMany(() => MovieUserLike, movieLike => movieLike.movie)
+  likes: MovieUserLike[]
+
+  @OneToMany(() => MovieUserDislike, movieDislike => movieDislike.movie)
+  dislikes: MovieUserDislike[]
 }
